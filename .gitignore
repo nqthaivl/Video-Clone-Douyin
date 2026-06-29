@@ -1,0 +1,37 @@
+node_modules/
+dist/
+dist-electron/
+release/
+backend/.venv/
+backend/vendor/hunyuan_vl/
+backend/bin/
+.tools/
+**/__pycache__/
+*.pyc
+*.tsbuildinfo
+*.log
+backend/python311/
+tmp_downloads/
+Video Python/backend/.venv/
+Video Python/backend/python311/
+Video Python/downloader/node_modules/
+
+# Temp / Compressed files
+*.tmp
+*.7z
+*.zip
+*.tar.gz
+
+# Environment variables & secrets
+.env
+*.env
+*.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE configs
+.vscode/
+.idea/

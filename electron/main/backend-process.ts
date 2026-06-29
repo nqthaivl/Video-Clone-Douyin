@@ -29,19 +29,33 @@ function appRoot() {
 
 function pythonExecutable(root: string) {
   if (process.env.VIDEO_DUBBING_PYTHON) return process.env.VIDEO_DUBBING_PYTHON;
+  const venvPython = process.platform === "win32"
+    ? path.join(root, "backend", ".venv", "Scripts", "python.exe")
+    : path.join(root, "backend", ".venv", "bin", "python");
+  const embedPython = process.platform === "win32"
+    ? path.join(root, "backend", "python311", "python.exe")
+    : "";
+  const sitePackages = path.join(root, "backend", ".venv", "Lib", "site-packages");
+
+  // Dev: full venv has all deps and avoids embed-python path quirks.
+  if (!app.isPackaged && existsSync(venvPython)) return venvPython;
+
+  // Packaged portable: embed python + site-packages tree copied alongside.
+  if (embedPython && existsSync(embedPython) && existsSync(sitePackages)) return embedPython;
+
   const candidates = process.platform === "win32"
     ? [
-        path.join(root, "backend", "python311", "python.exe"),
-        path.join(root, "backend", ".venv", "Scripts", "python.exe"),
+        venvPython,
+        embedPython,
         path.join(root, ".venv", "Scripts", "python.exe"),
         path.join(root, "..", ".venv", "Scripts", "python.exe")
       ]
     : [
-        path.join(root, "backend", ".venv", "bin", "python"),
+        venvPython,
         path.join(root, ".venv", "bin", "python"),
         path.join(root, "..", ".venv", "bin", "python")
       ];
-  return candidates.find(existsSync) || (process.platform === "win32" ? "python" : "python3");
+  return candidates.find((p) => p && existsSync(p)) || (process.platform === "win32" ? "python" : "python3");
 }
 
 async function waitForBackend(url: string, timeoutMs = 180_000) {

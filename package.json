@@ -16,6 +16,7 @@
     "package": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win zip",
     "package:dir": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --dir --win",
     "package:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File ./window-package.ps1",
+    "package:windows:fast": "powershell -NoProfile -ExecutionPolicy Bypass -File ./window-package.ps1 -SkipSetup",
     "package:zip": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win zip --prepackaged release/win-unpacked"
   },
   "dependencies": {

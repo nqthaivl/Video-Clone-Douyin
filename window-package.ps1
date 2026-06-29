@@ -9,6 +9,10 @@
 #   release\win-unpacked\          - thu muc chay truc tiep (Video Clone.exe)
 #   release\Video-Clone-<ver>-win-x64-portable.zip
 
+param(
+    [switch]$SkipSetup
+)
+
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
@@ -52,6 +56,20 @@ function New-ReleaseZip {
     }
 }
 
+function Write-EmbedPythonPth {
+    param([string]$PythonDest)
+    if (-not (Test-Path $PythonDest)) { return }
+    $pthFile = Join-Path $PythonDest "python311._pth"
+    $content = @"
+python311.zip
+.
+..\.venv\Lib\site-packages
+import site
+"@
+    Set-Content -Path $pthFile -Value $content -Encoding ascii
+    Write-Host "Da cau hinh $pthFile"
+}
+
 function Sync-Tree {
     param(
         [string]$Src,
@@ -89,10 +107,14 @@ Write-Host " Dong goi Windows portable: $productName v$version"
 Write-Host "========================================"
 
 # 1. Thiet lap moi truong portable (Python embed, FFmpeg, .venv site-packages)
-Write-Host "`n[1/4] Thiet lap moi truong portable (setup-portable.ps1)..."
-& $SetupScript
-if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
-    throw "setup-portable.ps1 that bai (exit $LASTEXITCODE)."
+if (-not $SkipSetup) {
+    Write-Host "`n[1/4] Thiet lap moi truong portable (setup-portable.ps1)..."
+    & $SetupScript
+    if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+        throw "setup-portable.ps1 that bai (exit $LASTEXITCODE)."
+    }
+} else {
+    Write-Host "`n[1/4] Bo qua setup-portable.ps1 (-SkipSetup)."
 }
 
 $PythonExe = Join-Path $Root "backend\python311\python.exe"
@@ -131,6 +153,10 @@ Require-Path $packBackend "resources\backend trong goi build"
 Sync-Tree (Join-Path $Root "backend\python311") (Join-Path $packBackend "python311")
 Sync-Tree (Join-Path $Root "backend\bin") (Join-Path $packBackend "bin")
 Sync-Tree $SitePkgs (Join-Path $packBackend ".venv\Lib\site-packages")
+
+# Embed python bo qua PYTHONPATH env — phai ghi dung python311._pth sau khi copy
+Write-EmbedPythonPth (Join-Path $Root "backend\python311")
+Write-EmbedPythonPth (Join-Path $packBackend "python311")
 
 # 4. Nen ZIP (noi dung win-unpacked, khong them lop thu muc win-unpacked)
 $zipName = "$safeName-$version-win-x64-portable.zip"

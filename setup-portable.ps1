@@ -74,14 +74,16 @@ if (-not (Test-Path (Join-Path $PythonDest "python.exe"))) {
     Write-Host "Portable Python da duoc giai nen san tai: $PythonDest"
 }
 
-# BUOC QUAN TRONG: Doi ten python*.pth de kich hoat import tu site-packages
-Get-ChildItem -Path $PythonDest -Filter "python*.pth" -File -ErrorAction SilentlyContinue | ForEach-Object {
-    $bakName = "$($_.Name).bak"
-    if (-not (Test-Path (Join-Path $PythonDest $bakName))) {
-        Write-Host "Doi ten $($_.Name) thanh $bakName..."
-        Rename-Item -Path $_.FullName -NewName $bakName -Force
-    }
-}
+# BUOC QUAN TRONG: python311._pth phai tro toi site-packages (embed bo qua PYTHONPATH)
+$pthFile = Join-Path $PythonDest "python311._pth"
+$pthContent = @"
+python311.zip
+.
+..\.venv\Lib\site-packages
+import site
+"@
+Set-Content -Path $pthFile -Value $pthContent -Encoding ascii
+Write-Host "Da cau hinh $pthFile tro toi .venv\Lib\site-packages"
 
 # 4. Tai va thiet lap FFmpeg and FFprobe
 $FfmpegZip = Join-Path $TempDir "ffmpeg-essentials_build.zip"
